@@ -20,11 +20,11 @@ func ParallelSum(slcs ...[]int) []int {
 		close(input)
 	}(input)
 
-	for {
+	for forLoop := 0; ; forLoop++ {
 		var wg sync.WaitGroup
 		wg.Add(cap(input) / 2)
 		for i := 0; i < cap(input)/2; i++ {
-			out := Sum(input)
+			out := Sum(input, i, forLoop)
 			go func() {
 				defer wg.Done()
 				for o := range out {
@@ -36,7 +36,6 @@ func ParallelSum(slcs ...[]int) []int {
 			wg.Wait()
 			close(output)
 		}(output)
-
 		input = make(chan []int, cap(input)/2)
 		if cap(input) < 2 {
 			result = <-output
@@ -52,7 +51,28 @@ func ParallelSum(slcs ...[]int) []int {
 }
 
 //TODO:complete the Sum for the parallel sum function.
-var Sum func(sum chan []int) (output chan []int)
+// ParallelSum的策略是每次取一半的Goroutine，每个goroutine都自由地从input中拿vector出来求和。
+// 并且把结果加到新的input中，直到老input被取光。之后开始下一个循环
+func Sum(in chan []int, iter int, forLoop int) (out chan []int) {
+	out = make(chan []int)
+	go func() {
+		acc := <-in
+		cnt := 1
+		for vec := range in {
+			if len(vec) == 0 {
+				break
+			}
+			for i, v := range vec {
+				acc[i] += v
+			}
+			cnt++
+		}
+		fmt.Printf("==forLoop %d iter %d consume: %d; output: %v==\n", forLoop, iter, cnt, acc)
+		out <- acc
+		defer close(out)
+	}()
+	return out
+}
 
 func main() {
 	fmt.Println(`Please edit main.go,and complete the 'Sum' function for the parallel sum to pass the test.
@@ -61,6 +81,5 @@ Concurrency is the most important feature of Go,and the principle is
 In this exercise you need to catch many features of channels.This is a tour for you to figure out!
 Because here the focus is pipleline model (link:http://blog.golang.org/pipelines).
 It's different from the custom parallel vector sum in which sum numer at every index of the vectors in a goroutine.
-In this exercies,vector is just a abstract,you can change it to a struct or any thing else that can be sumed up.
-`)
+In this exercies,vector is just a abstract,you can change it to a struct or any thing else that can be sumed up.`)
 }
