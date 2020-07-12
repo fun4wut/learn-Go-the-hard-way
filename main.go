@@ -39,7 +39,34 @@ func Opponent(guess chan Choice, please chan struct{}) {
 	}
 }
 
-var Cheat func(guess chan Choice) chan Choice
+//TODO: Complete the Cheat function
+func Cheat(guess chan Choice) chan Choice {
+	cheatChan := make(chan Choice)
+	go func() {
+		for i := 0; i < 3; i++ {
+			g1 := <-guess
+			g2 := <-guess
+			if g1.Who == 0 { // g1 is me
+				g1.Guess = winMetod(g2.Guess)
+			} else { // g2 is me
+				g2.Guess = winMetod(g1.Guess)
+			}
+			cheatChan <- g1
+			cheatChan <- g2
+		}
+	}()
+	return cheatChan
+}
+
+func winMetod(guess int) int {
+	if guess == PAPER {
+		return SCISSORS
+	} else if guess == SCISSORS {
+		return ROCK
+	} else {
+		return PAPER
+	}
+}
 
 func Me(guess chan Choice, please chan struct{}) {
 	for i := 0; i < 3; i++ {
