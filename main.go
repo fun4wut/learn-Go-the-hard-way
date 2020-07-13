@@ -27,7 +27,17 @@ func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			if r.httpHandler != nil {
 				r.httpHandler.ServeHTTP(res, req)
 			} else {
-				//TODO:pass the contex to the function and write return value to res.
+				//TODO:pass the context to the function and write return value to res.
+				ctx := &Context{
+					Request:        req,
+					ResponseWriter: res,
+					Server:         s,
+					Params:         make(map[string]string), // Param似乎用不到的样子，直接返回个空的
+				}
+				result := r.handler.Call(
+					[]reflect.Value{reflect.ValueOf(ctx)},
+				)[0]
+				res.Write([]byte(result.Interface().(string))) // 这里面向case编程，强制转换了下类型
 			}
 		}
 	}
