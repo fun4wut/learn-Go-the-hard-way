@@ -34,13 +34,27 @@ func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 					Server:         s,
 					Params:         make(map[string]string), // Param似乎用不到的样子，直接返回个空的
 				}
-				result := r.handler.Call(
-					[]reflect.Value{reflect.ValueOf(ctx)},
-				)[0]
+				args := []reflect.Value{}
+				if requireCtx(r.handler.Type()) {
+					args = append(args, reflect.ValueOf(ctx))
+				}
+				result := r.handler.Call(args)[0]
 				res.Write([]byte(result.Interface().(string))) // 这里面向case编程，强制转换了下类型
 			}
 		}
 	}
+}
+
+// handler的参数可能没有，或者一个
+func requireCtx(handlerType reflect.Type) bool {
+	if handlerType.NumIn() == 0 {
+		return false
+	}
+	a0 := handlerType.In(0)
+	if a0.Kind() != reflect.Ptr || a0.Elem() != contextType {
+		return false
+	}
+	return true
 }
 
 //close the server
