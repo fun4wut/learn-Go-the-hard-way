@@ -33,12 +33,12 @@ func (s *Server) Use(middlewares ...Middleware) {
 
 //TODO:Next calls next middleware.
 func (ctx *Context) Next() {
-	ctx.idx += 1
+	ctx.idx += 1 // 调用Next就是一个简单的游标往后偏移的过程
 }
 
 //TODO:Invok calls middleware at index of ctx.idx.
 func (ctx *Context) Invok() {
-	ctx.middlewares[ctx.idx].Handle(ctx)
+	ctx.middlewares[ctx.idx].Handle(ctx) // Invoke，直接调用当前的中间件即可
 }
 
 //implements http.Handle
@@ -171,6 +171,7 @@ func init() {
 type ParseForm struct {
 }
 
+// 中间件调用规范
 func (p *ParseForm) Handle(ctx *Context) {
 	ctx.ParseForm()
 	ctx.Next()
