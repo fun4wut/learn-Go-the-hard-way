@@ -28,14 +28,17 @@ type Middleware interface {
 
 //TODO:Use add a new Middleware that implements Handle(*Context)
 func (s *Server) Use(middlewares ...Middleware) {
+	s.middlewares = append(s.middlewares, middlewares...)
 }
 
 //TODO:Next calls next middleware.
 func (ctx *Context) Next() {
+	ctx.idx += 1
 }
 
 //TODO:Invok calls middleware at index of ctx.idx.
 func (ctx *Context) Invok() {
+	ctx.middlewares[ctx.idx].Handle(ctx)
 }
 
 //implements http.Handle
