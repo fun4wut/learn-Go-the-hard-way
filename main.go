@@ -164,9 +164,57 @@ func lexUnkown(l *lexer) stateFn {
 	return nil
 }
 
-//TODO:scan number,and emit the token.
+//TODO: scan number,and emit the token.
 func lexNum(l *lexer) stateFn {
-	//unfinished
+	r := l.next()
+	var hasMatissa = false
+	var hasFraction = false
+	if r == '-' {
+		r = l.next()
+		if !unicode.IsDigit(r) {
+			l.errf("expect decimal after '-',found %c at line %d,column %d", r, l.lineNum+1, l.colNum)
+			return lexError
+		}
+	}
+	//scan matissa
+	if r != '.' { //optional digit*
+		for unicode.IsDigit(r) {
+			hasMatissa = true
+			r = l.next()
+		}
+	}
+	//scan fraction
+	if r == '.' { //optional .digit*
+		r = l.next()
+		for unicode.IsDigit(r) {
+			hasFraction = true
+			r = l.next()
+		}
+	}
+	ln := l.lineNum
+	cn := l.colNum + 1
+	if r == 'e' || r == 'E' { //optional [E|e]-?digit*
+		r = l.next()
+		if r == '-' {
+			r = l.next()
+		}
+		//expotiona must be fllowed by at least one decimal digit
+		if !unicode.IsDigit(r) {
+			l.errf("expect decimal after expotion %c at line %d,column %d", r, l.lineNum+1, l.colNum)
+			return lexError
+		}
+		for unicode.IsDigit(r) {
+			r = l.next()
+		}
+	}
+
+	if !hasMatissa && !hasFraction {
+		l.errf("expect decimal at line %d,column %d", ln, cn)
+	}
+	if r != eof {
+		l.backup()
+	}
+	l.emit(tNUM)
 	return lexBegin
 }
 
