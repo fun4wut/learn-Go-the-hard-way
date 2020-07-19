@@ -12,6 +12,7 @@ func TestCheetSheet(t *testing.T) {
 (⌐■_■)
 
 ` {
+		println(out)
 		t.Fail()
 	}
 }
